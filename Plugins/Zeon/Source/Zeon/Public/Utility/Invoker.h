@@ -7,17 +7,17 @@
 enum class EInvokerType { Fun, ConstFun, StaticFunc, Lambda };
 
 template<uint16 DesiredMaxInlineSize = 128, uint8 DefaultAlignment = 8>
-struct ZEON_API FInvokerConfig final
+struct FInvokerConfig final
 {
 	static constexpr uint16 DesiredMaxInlineSizeValue = DesiredMaxInlineSize;
 	static constexpr uint8 DefaultAlignmentValue = DefaultAlignment;
 };
 
 template<typename Signature, typename Config = FInvokerConfig<>>
-struct ZEON_API TInvoker;
+struct TInvoker;
 
 template<typename RetT, typename... Args, typename Config>
-struct ZEON_API TInvoker<RetT(Args...), Config> final
+struct TInvoker<RetT(Args...), Config> final
 {
 	static constexpr uint16 DesiredMaxInlineSize = Config::DesiredMaxInlineSizeValue;
 	static constexpr uint8 DefaultAlignment = Config::DefaultAlignmentValue;
