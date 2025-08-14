@@ -15,23 +15,26 @@ UStaticTickerManager::UStaticTickerManager()
 	TryAutoModifyTickerState(ETickerStateType::Init);
 }
 
-void UStaticTickerManager::BeginDestroy()
+void UStaticTickerManager::Shutdown()
 {
-	UObject::BeginDestroy();
-	
-	TickerModules.Empty();
-	FTSTicker::GetCoreTicker().RemoveTicker(TickHandle);
+	EndTicker();
 	FZeonUtil::OnWorldBeginPlay.Remove(GameStartedDelegateHandle);
 	FWorldDelegates::OnWorldBeginTearDown.Remove(GameEndedDelegateHandle);
 	FPauseManager::OnGamePause.Remove(GamePauseDelegateHandle);
+	TickerModules.Empty();
 }
 
+void UStaticTickerManager::BeginDestroy()
+{
+	Shutdown();
+	Super::BeginDestroy();
+}
 
 bool UStaticTickerManager::Tick(float DeltaTime)
 {
 	for (auto [_, Module] : TickerModules)
 	{
-		if (Module->bTickInPauseDisabled && !bLastPauseState) continue;
+		if (Module->bTickInPauseDisabled && bLastPauseState) continue;
 		Module->Tick(DeltaTime);
 	}
 	return !CleanupManager(DeltaTime);
@@ -59,12 +62,10 @@ bool UStaticTickerManager::DoesRequireTicker(const UTickerModule* IgnoreModule) 
 	if (TickerModules.IsEmpty()) return false;
 	for (auto& ModuleData : TickerModules)
 	{
-		if (ModuleData.Value->NeedUpdate())
+		if (const auto Module = ModuleData.Value.Get(); Module->NeedUpdate())
 		{
-			if (IgnoreModule && ModuleData.Key != IgnoreModule->GetClass())
-			{
-				return true;
-			}
+			if (!IgnoreModule) return true;
+			if (ModuleData.Key != IgnoreModule->GetClass()) return true;
 		}
 	}
 	return false;
@@ -84,7 +85,7 @@ void UStaticTickerManager::TryStartTicker()
 void UStaticTickerManager::TryEndTicker(const UTickerModule* Module) const
 {
 	check(Module)
-	if (!DoesRequireTicker(Module))
+	if (DoesRequireTicker(Module))
 	{
 		UE_LOG(LogStaticTicker, Warning, TEXT("Cannot disable ticker because module '%s' is using it"), *Module->GetClass()->GetName());
 		return;

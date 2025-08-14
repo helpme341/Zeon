@@ -32,7 +32,7 @@ class TICKERSYSTEM_API UStaticTickerManager : public UObject
 	friend UTickerModule;
 	
 	bool Tick(float DeltaTime);
-	virtual void BeginDestroy() override;
+	void BeginDestroy() override;
 	bool CleanupManager(float DeltaTime);
 	
 	bool DoesRequireTicker(const UTickerModule* IgnoreModule) const;
@@ -58,30 +58,30 @@ class TICKERSYSTEM_API UStaticTickerManager : public UObject
 public:
 	UStaticTickerManager();
 	
-	// ---------------- Settings ----------------
+	// ---------------- AbilitySettings ----------------
 
 	/** Использовать ли систему проверки занятости тикера */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySettings")
 	bool bUseCleanupSystem = true;
 
 	/** Частота проверки занятость тикера */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "bUseCleanupSystem"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySettings", meta = (EditCondition = "bUseCleanupSystem"))
 	float CleanupRate = 30.f;
 
 	/** Частота обновления состояния паузы */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySettings")
 	float PauseUpdateRate = 0.1f;
 
 	/** Частота обновления главного тикера */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySettings")
 	float GlobalTickerUpdateRate = 0.001;
 
 	/** Список триггеров, при активации одного из них, система попытается активировать тикер */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySettings")
 	TSet<ETickerStateType> AutoActivateTickerType;
 
 	/** Список триггеров, при активации одного из них, система попытается отключить тикер */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySettings")
 	TSet<ETickerStateType> AutoDisableTickerType;
 
 	// ---------------- Fun ----------------
@@ -115,6 +115,9 @@ public:
 
 	/** Создает объект, важно отметить что функцию запрещённое юзать в конструкторе owner */
 	static UStaticTickerManager* New(UObject* Owner) { return NewObject<UStaticTickerManager>(Owner); }
+
+	/** Функция должна быть обязательно вызвана перед удалением владелица*/ 
+	FORCEINLINE void Shutdown();
 	
 private:
 
@@ -142,7 +145,7 @@ T* UStaticTickerManager::AddModule()
 	}
 	if (T* NewModule = NewObject<T>(this))
 	{
-		// Set up Module Settings...
+		// Set up Module AbilitySettings...
 		NewModule->OwnerManager = this;
 		TickerModules.Add(ModuleClass, TStrongObjectPtr(MoveTemp(NewModule)));
 		return NewModule;

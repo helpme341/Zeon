@@ -14,5 +14,6 @@ void UTickerModule::TryEndTicker() const
 
 void UTickerModule::TryEndTickerSave() const
 {
+	if (HasAnyFlags(RF_ClassDefaultObject)) return;
 	if (!NeedUpdate()) OwnerManager->TryEndTicker(this);
 }
