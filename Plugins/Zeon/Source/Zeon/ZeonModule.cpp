@@ -1,9 +1,9 @@
 
-#include "Zeon.h"
+#include "ZeonModule.h"
 #include "Public/Utility/PauseManager.h"
 #include "Public/Utility/ZeonUtilits.h"
 
-IMPLEMENT_MODULE(FZeonModule, Zeon)
+IMPLEMENT_MODULE(FZeonModule, ZeonCore)
 
 void FZeonModule::StartupModule()
 {
@@ -12,7 +12,7 @@ void FZeonModule::StartupModule()
 }
 
 void FZeonModule::ShutdownModule()
-{
+{	
 	FZeonUtil::Shutdown();
 	FPauseManager::Shutdown();
 }

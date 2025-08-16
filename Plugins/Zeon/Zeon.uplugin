@@ -1,29 +1,28 @@
 {
-	"FileVersion": 3,
-	"Version": 1,
-	"VersionName": "0.3.4.1",
-	"FriendlyName": "Zeon",
-	"Description": "",
-	"Category": "Other",
-	"CreatedBy": "",
-	"CreatedByURL": "",
-	"DocsURL": "",
-	"MarketplaceURL": "",
-	"SupportURL": "",
-	"CanContainContent": true,
-	"IsBetaVersion": false,
-	"IsExperimentalVersion": false,
-	"Installed": false,
-	"Modules": [
-		{
-			"Name": "Zeon",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "TickerSystem",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		}
-	]
+    "FileVersion": 3,
+    "Version": 1,
+    "VersionName": "0.3.4.2",
+    "FriendlyName": "Zeon",
+    "Name": "Zeon",
+    "Description": "",
+    "Category": "Other",
+    "CreatedBy": "Help Me",
+    "CreatedByURL": "",
+    "DocsURL": "",
+    "MarketplaceURL": "",
+    "SupportURL": "",
+    "EngineVersion": "5.6.0",
+    "CanContainContent": true,
+    "Modules": [
+        {
+          "Name": "Zeon",
+          "Type": "Runtime",
+          "LoadingPhase": "Default"
+        },
+        {
+          "Name": "TickerSystem",
+          "Type": "Runtime",
+          "LoadingPhase": "Default"
+        }
+    ]
 }
