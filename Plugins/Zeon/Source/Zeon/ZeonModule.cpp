@@ -3,7 +3,7 @@
 #include "Public/Utility/PauseManager.h"
 #include "Public/Utility/ZeonUtilits.h"
 
-IMPLEMENT_MODULE(FZeonModule, ZeonCore)
+IMPLEMENT_MODULE(FZeonModule, Zeon)
 
 void FZeonModule::StartupModule()
 {

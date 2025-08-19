@@ -91,6 +91,18 @@ private:
 public:
 	
 	TInvoker() = default;
+
+	template<typename ClassType>
+	FORCEINLINE TInvoker(ClassType* InInstance, RetT(ClassType::*InMethod)(Args...)) { Bind(InInstance, InMethod); }
+
+	template<typename ClassType>
+	FORCEINLINE TInvoker(ClassType* InInstance, RetT(ClassType::*InMethod)(Args...) const) { Bind(InInstance, InMethod); }
+
+	FORCEINLINE TInvoker(RetT(*StaticFunc)(Args...)) { Bind(StaticFunc); }
+	
+	template<typename LambdaT>
+	FORCEINLINE TInvoker(LambdaT&& Lambda) { Bind(Lambda); }
+	
 	
 	FORCEINLINE RetT operator()(Args... InArgs)
 	{	
@@ -104,6 +116,7 @@ public:
 
 	FORCEINLINE explicit operator bool() const { return IsBound(); }
 
+	
 	template<typename ClassType>
 	void Bind(ClassType* InInstance, RetT(ClassType::*InMethod)(Args...))
 	{
