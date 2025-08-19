@@ -1,7 +1,7 @@
 {
     "FileVersion": 3,
     "Version": 0,
-    "VersionName": "0.3.4.3",
+    "VersionName": "0.3.5",
     "FriendlyName": "Zeon",
     "Name": "Zeon",
     "Description": "",
@@ -17,6 +17,11 @@
         {
           "Name": "Zeon",
           "Type": "Runtime",
+          "LoadingPhase": "Default"
+        },
+        {
+          "Name": "ZeonEditor",
+          "Type": "Editor",
           "LoadingPhase": "Default"
         },
         {
