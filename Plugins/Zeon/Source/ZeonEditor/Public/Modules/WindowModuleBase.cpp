@@ -7,7 +7,7 @@ void FWindowModuleBase::StartupModule()
 	PostPIEStartedDelegateHandle = FEditorDelegates::PostPIEStarted.AddRaw(this, &FWindowModuleBase::OnPostPIEStarted);
 	EndPIEDelegateHandle = FEditorDelegates::EndPIE.AddRaw(this, &FWindowModuleBase::OnEndPIE);
 	if (bSetUpButton) UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FWindowModuleBase::RegisterButton));
-	if (bUpdateWindow) TickDelegate = FTickerDelegate::CreateRaw(this, &FWindowModuleBase::UpdateWindowInformation);
+	if (bUpdateWindow) TickDelegate = FTickerDelegate::CreateRaw(this, &FWindowModuleBase::UpdateWindow_Internal);
 	
 	StartTickerUpdate();
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(RegisterWindowId, FOnSpawnTab::CreateRaw(this, &FWindowModuleBase::RegisterWindow))
@@ -56,9 +56,13 @@ void FWindowModuleBase::RegisterButton()
 
 TSharedRef<SDockTab> FWindowModuleBase::RegisterWindow(const FSpawnTabArgs& SpawnTabArgs)
 {
-	return SNew(SDockTab).TabRole(NomadTab)
-	.OnTabClosed_Lambda([this](TSharedRef<SDockTab> ActivatedTab)
-	{
-		if (bAutoManageTicker) EndTickerUpdate();
-	});
+	TSharedRef<SDockTab> Window = SNew(SDockTab).TabRole(NomadTab)
+		.OnTabClosed_Lambda([this](TSharedRef<SDockTab> /* ActivatedTab */)
+		{
+			if (bAutoManageTicker) EndTickerUpdate();
+		});
+		
+	const FSlateIcon Icon = FSlateIconFinder::FindIcon(WindowIcon);
+	Window->SetTabIcon(Icon.GetIcon());
+	return Window;
 }

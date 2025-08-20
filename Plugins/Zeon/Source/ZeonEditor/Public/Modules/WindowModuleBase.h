@@ -3,7 +3,6 @@
 
 class ZEONEDITOR_API FWindowModuleBase : public IModuleInterface
 {
-
 	FTickerDelegate TickDelegate;
 	FTSTicker::FDelegateHandle TickHandle;
 	FDelegateHandle PostPIEStartedDelegateHandle;
@@ -30,7 +29,8 @@ protected:
 
 	virtual void RegisterButton();
 	virtual TSharedRef<SDockTab> RegisterWindow(const FSpawnTabArgs& SpawnTabArgs);
-	
+
+	virtual bool UpdateWindow_Internal(float DeltaTime) { return true; }
 	virtual bool UpdateWindowInformation(float DeltaTime) { return true; }
 
 	/**
@@ -40,11 +40,12 @@ protected:
 	bool bAutoManageTicker = true;
 	
 	// Window Settings:
-	bool bUpdateWindow = false;
+	bool bUpdateWindow = true;
 	float UpdateWindowRate = 0.f;
 	
 	FName RegisterWindowId;
 	FText WindowDisplayName;
+	FName WindowIcon;
 	ETabSpawnerMenuType::Type WindowMenuType = ETabSpawnerMenuType::Hidden;
 
 	// Button settings:

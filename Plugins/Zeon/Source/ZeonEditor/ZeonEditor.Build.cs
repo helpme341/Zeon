@@ -8,23 +8,19 @@ public class ZeonEditor : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new[]
 		{
-			"Core", "CoreUObject", "Engine"
+			"Core", 
+			"CoreUObject",
+			"Engine",
+			"Zeon"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new[]
 		{
-			// UI/Slate
-			"Slate", "SlateCore",
-			// Меню и кнопки тулбаров
+			"Slate",
+			"SlateCore",
 			"ToolMenus",
-			// Делегаты редактора, PIE и пр.
 			"UnrealEd",
-			// Если расширяете главное меню/панели редактора
 			"LevelEditor",
-			// Нередко требуется для команд/действий
-			"EditorFramework",
-			// Часто нужен при регистрации/иконках/плагин-инфо
-			"Projects"
 		});
 	}
 }
