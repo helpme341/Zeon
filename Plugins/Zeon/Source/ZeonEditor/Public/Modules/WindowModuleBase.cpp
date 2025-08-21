@@ -9,7 +9,6 @@ void FWindowModuleBase::StartupModule()
 	if (bSetUpButton) UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FWindowModuleBase::RegisterButton));
 	if (bUpdateWindow) TickDelegate = FTickerDelegate::CreateRaw(this, &FWindowModuleBase::UpdateWindowInformation);
 	
-	StartTickerUpdate();
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(RegisterWindowId, FOnSpawnTab::CreateRaw(this, &FWindowModuleBase::RegisterWindow))
 		.SetDisplayName(WindowDisplayName)
 		.SetMenuType(WindowMenuType);
