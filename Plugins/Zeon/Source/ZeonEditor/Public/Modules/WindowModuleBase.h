@@ -30,7 +30,6 @@ protected:
 	virtual void RegisterButton();
 	virtual TSharedRef<SDockTab> RegisterWindow(const FSpawnTabArgs& SpawnTabArgs);
 
-	virtual bool UpdateWindow_Internal(float DeltaTime) { return true; }
 	virtual bool UpdateWindowInformation(float DeltaTime) { return true; }
 
 	/**

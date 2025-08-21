@@ -158,11 +158,7 @@ template <typename T>
 T* UStaticTickerManager::GetModule()
 {
 	const auto& ModuleClass = T::StaticClass();
-	if (!TickerModules.Contains(ModuleClass))
-	{
-		LogTickerWarning(FString::Printf(TEXT("Cannot find module: %s"), *ModuleClass->GetName()));
-		return nullptr;
-	}
+	check(TickerModules.Contains(ModuleClass))
 	TStrongObjectPtr<UTickerModule>* FoundPtr = TickerModules.Find(ModuleClass);
 	return   FoundPtr ? Cast<T>(FoundPtr->Get()) : nullptr;
 }

@@ -7,7 +7,7 @@ void FWindowModuleBase::StartupModule()
 	PostPIEStartedDelegateHandle = FEditorDelegates::PostPIEStarted.AddRaw(this, &FWindowModuleBase::OnPostPIEStarted);
 	EndPIEDelegateHandle = FEditorDelegates::EndPIE.AddRaw(this, &FWindowModuleBase::OnEndPIE);
 	if (bSetUpButton) UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FWindowModuleBase::RegisterButton));
-	if (bUpdateWindow) TickDelegate = FTickerDelegate::CreateRaw(this, &FWindowModuleBase::UpdateWindow_Internal);
+	if (bUpdateWindow) TickDelegate = FTickerDelegate::CreateRaw(this, &FWindowModuleBase::UpdateWindowInformation);
 	
 	StartTickerUpdate();
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(RegisterWindowId, FOnSpawnTab::CreateRaw(this, &FWindowModuleBase::RegisterWindow))
