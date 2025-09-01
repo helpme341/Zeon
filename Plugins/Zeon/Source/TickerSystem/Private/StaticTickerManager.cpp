@@ -7,15 +7,15 @@
 
 DEFINE_LOG_CATEGORY(LogStaticTicker);
 
-UStaticTickerManager::UStaticTickerManager()
+FStaticTickerManager::FStaticTickerManager()
 {
-	GameStartedDelegateHandle = FZeonUtil::OnWorldBeginPlay.AddUObject(this, &UStaticTickerManager::OnGameStarted);
-	GameEndedDelegateHandle = FWorldDelegates::OnWorldBeginTearDown.AddUObject(this, &UStaticTickerManager::OnGameEnded);
-	GamePauseDelegateHandle = FPauseManager::OnGamePause.AddUObject(this, &UStaticTickerManager::OnGamePaused);
+	GameStartedDelegateHandle = FZeonUtil::OnWorldBeginPlay.AddRaw(this, &FStaticTickerManager::OnGameStarted);
+	GameEndedDelegateHandle = FWorldDelegates::OnWorldBeginTearDown.AddRaw(this, &FStaticTickerManager::OnGameEnded);
+	GamePauseDelegateHandle = FPauseManager::OnGamePause.AddRaw(this, &FStaticTickerManager::OnGamePaused);
 	TryAutoModifyTickerState(ETickerStateType::Init);
 }
 
-void UStaticTickerManager::Shutdown()
+FStaticTickerManager::~FStaticTickerManager()
 {
 	EndTicker();
 	FZeonUtil::OnWorldBeginPlay.Remove(GameStartedDelegateHandle);
@@ -24,15 +24,9 @@ void UStaticTickerManager::Shutdown()
 	TickerModules.Empty();
 }
 
-void UStaticTickerManager::BeginDestroy()
+bool FStaticTickerManager::Tick(float DeltaTime)
 {
-	Shutdown();
-	Super::BeginDestroy();
-}
-
-bool UStaticTickerManager::Tick(float DeltaTime)
-{
-	for (auto [_, Module] : TickerModules)
+	for (auto& [_, Module] : TickerModules)
 	{
 		if (Module->bTickInPauseDisabled && bLastPauseState) continue;
 		Module->Tick(DeltaTime);
@@ -40,7 +34,7 @@ bool UStaticTickerManager::Tick(float DeltaTime)
 	return !CleanupManager(DeltaTime);
 }
 
-bool UStaticTickerManager::CleanupManager(float DeltaTime)
+bool FStaticTickerManager::CleanupManager(float DeltaTime)
 {
 	if (!TickHandle.IsValid() || !bUseCleanupSystem) return false;
 	
@@ -57,7 +51,7 @@ bool UStaticTickerManager::CleanupManager(float DeltaTime)
 	return false;
 }
 
-bool UStaticTickerManager::DoesRequireTicker(const UTickerModule* IgnoreModule) const
+bool FStaticTickerManager::DoesRequireTicker(const FTickerModule* IgnoreModule) const
 {
 	if (TickerModules.IsEmpty()) return false;
 	for (auto& ModuleData : TickerModules)
@@ -65,13 +59,13 @@ bool UStaticTickerManager::DoesRequireTicker(const UTickerModule* IgnoreModule) 
 		if (const auto Module = ModuleData.Value.Get(); Module->NeedUpdate())
 		{
 			if (!IgnoreModule) return true;
-			if (ModuleData.Key != IgnoreModule->GetClass()) return true;
+			if (ModuleData.Key != IgnoreModule->ModuleName) return true;
 		}
 	}
 	return false;
 }
 
-void UStaticTickerManager::TryStartTicker()
+void FStaticTickerManager::TryStartTicker()
 {
 	if (TickHandle.IsValid())
 	{
@@ -79,21 +73,21 @@ void UStaticTickerManager::TryStartTicker()
 		return;
 	}
 	CurrentCleanupTime = 0.f;
-	TickHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UStaticTickerManager::Tick), GlobalTickerUpdateRate);
+	TickHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateRaw(this, &FStaticTickerManager::Tick), GlobalTickerUpdateRate);
 }
 
-void UStaticTickerManager::TryEndTicker(const UTickerModule* Module) const
+void FStaticTickerManager::TryEndTicker(const FTickerModule* Module) const
 {
 	check(Module)
 	if (DoesRequireTicker(Module))
 	{
-		UE_LOG(LogStaticTicker, Warning, TEXT("Cannot disable ticker because module '%s' is using it"), *Module->GetClass()->GetName());
+		UE_LOG(LogStaticTicker, Warning, TEXT("Cannot disable ticker because module '%s' is using it"), *Module->ModuleName.ToString());
 		return;
 	}
 	EndTicker();
 }
 
-bool UStaticTickerManager::EndTicker() const
+bool FStaticTickerManager::EndTicker() const
 {
 	if (!TickHandle.IsValid())
 	{
@@ -104,19 +98,19 @@ bool UStaticTickerManager::EndTicker() const
 	return !TickHandle.IsValid();
 }
 
-void UStaticTickerManager::OnGameStarted(EWorldType::Type /*WorldType*/)
+void FStaticTickerManager::OnGameStarted(EWorldType::Type /*WorldType*/)
 {
 	TryAutoModifyTickerState(ETickerStateType::BeginPlay);
 	for (const auto& ModuleData : TickerModules) ModuleData.Value->OnGameStarted();
 }
 
-void UStaticTickerManager::OnGameEnded(UWorld* /*World*/)
+void FStaticTickerManager::OnGameEnded(UWorld* /*World*/)
 {
 	TryAutoModifyTickerState(ETickerStateType::EndPlay);
 	for (const auto& ModuleData : TickerModules) ModuleData.Value->OnGameEnded();
 }
 
-void UStaticTickerManager::OnGamePaused(bool bPaused)
+void FStaticTickerManager::OnGamePaused(bool bPaused)
 {
 	TryAutoModifyTickerState(bPaused ? ETickerStateType::GamePaused : ETickerStateType::GameUnPaused);
 	for (const auto& ModuleData : TickerModules)
@@ -126,31 +120,25 @@ void UStaticTickerManager::OnGamePaused(bool bPaused)
 	}
 }
 
-
-UTickerModule* UStaticTickerManager::AddModule(const TSubclassOf<UTickerModule>& ModuleClass)
+bool FStaticTickerManager::RegisterTickerModule(FTickerModule* Module)
 {
-	if (TickerModules.Contains(ModuleClass))
+	check(Module)
+	if (TickerModules.Contains(Module->ModuleName))
 	{
-		UE_LOG(LogStaticTicker, Warning, TEXT("Cannot add module '%s' because it is already added"), *ModuleClass->GetName());
-		return nullptr;	
+		UE_LOG(LogStaticTicker, Warning, TEXT("Cannot add module '%s' because it is already added"), *Module->ModuleName.ToString());
+		return false;	
 	}
-	if (UTickerModule* NewModule = NewObject<UTickerModule>(this, ModuleClass.Get()))
-	{
-		// Setting Module Settings...
-		NewModule->OwnerManager = this;
-		TickerModules.Add(ModuleClass, TStrongObjectPtr(MoveTemp(NewModule)));
-		return NewModule;
-	}
-	UE_LOG(LogStaticTicker, Error, TEXT("Cannot create module: %s"), *ModuleClass->GetName());
-	return nullptr;
+	Module->OwnerManager = this;
+	TickerModules.Add(Module->ModuleName, TUniquePtr<FTickerModule>(std::move(Module)));
+	return true;
 }
 
-UTickerModule* UStaticTickerManager::GetModule(const TSubclassOf<UTickerModule>& ModuleClass)
+FTickerModule* FStaticTickerManager::GetTickerModuleMutable(const FName ModuleName)
 {
-	if (!TickerModules.Contains(ModuleClass))
+	if (!TickerModules.Contains(ModuleName))
 	{
-		UE_LOG(LogStaticTicker, Warning, TEXT("Cannot find module: %s"), *ModuleClass->GetName());
+		UE_LOG(LogStaticTicker, Warning, TEXT("Cannot find module: %s"), *ModuleName.ToString());
 		return nullptr;
 	}
-	return TickerModules.Find(ModuleClass)->Get();
+	return TickerModules.Find(ModuleName)->Get();
 }

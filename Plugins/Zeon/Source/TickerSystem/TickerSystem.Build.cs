@@ -14,18 +14,8 @@ public class TickerSystem : ModuleRules
 				"Core",
 				"CoreUObject",
 				"Engine",
+				"Zeon",
 			}
 		);
-		
-		PrivateDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"Core",
-				"CoreUObject",
-				"Engine",
-				"Zeon"
-			}
-		);
-		
 	}
 }

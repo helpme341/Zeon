@@ -24,9 +24,6 @@ public class PluginZeon : ModuleRules
 
 		PublicIncludePaths.AddRange(new string[] {
 			"PluginZeon",
-			"PluginZeon/Variant_Horror",
-			"PluginZeon/Variant_Shooter",
-			"PluginZeon/Variant_Shooter/AI"
 		});
 
 		// Uncomment if you are using Slate UI

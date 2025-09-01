@@ -2,18 +2,17 @@
 #include "TickerModule.h"
 #include "StaticTickerManager.h"
 
-void UTickerModule::TryStartTicker() const
+void FTickerModule::TryStartTicker() const
 {
 	OwnerManager->TryStartTicker();
 }
 
-void UTickerModule::TryEndTicker() const
+void FTickerModule::TryEndTicker() const
 {
 	OwnerManager->TryEndTicker(this);
 }
 
-void UTickerModule::TryEndTickerSave() const
+void FTickerModule::TryEndTickerSave() const
 {
-	if (HasAnyFlags(RF_ClassDefaultObject)) return;
-	if (!NeedUpdate()) OwnerManager->TryEndTicker(this);
+	if (!NeedUpdate()) TryEndTicker();
 }

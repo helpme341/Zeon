@@ -92,6 +92,29 @@ public:
 	
 	TInvoker() = default;
 
+	TInvoker(const TInvoker&) = delete;
+	TInvoker& operator=(const TInvoker&) = delete;
+
+	TInvoker(TInvoker&& Other) noexcept
+		: HolderContainer(MoveTemp(Other.HolderContainer))
+		, Instance(Other.Instance)
+	{
+		Other.Instance = nullptr;
+	}
+
+	TInvoker& operator=(TInvoker&& Other) noexcept
+	{
+		if (this != &Other)
+		{
+			HolderContainer   = THolderContainer();
+			HolderContainer   = MoveTemp(Other.HolderContainer);
+			Instance = Other.Instance;
+			Other.Instance = nullptr;
+		}
+		return *this;
+	}
+
+
 	template<typename ClassType>
 	FORCEINLINE TInvoker(ClassType* InInstance, RetT(ClassType::*InMethod)(Args...)) { Bind(InInstance, InMethod); }
 
@@ -102,8 +125,7 @@ public:
 	
 	template<typename LambdaT>
 	FORCEINLINE TInvoker(LambdaT&& Lambda) { Bind(Lambda); }
-	
-	
+		
 	FORCEINLINE RetT operator()(Args... InArgs)
 	{	
 		return HolderContainer.GetHolder().Invoke(Instance, std::forward<Args>(InArgs)...);
@@ -111,7 +133,7 @@ public:
 
 	FORCEINLINE bool operator==(TInvoker&& Another) const
 	{
-		return Another.Instance = Instance && Another.HolderContainer == HolderContainer;
+		return Another.Instance == Instance && Another.HolderContainer == HolderContainer;
 	}
 
 	FORCEINLINE explicit operator bool() const { return IsBound(); }

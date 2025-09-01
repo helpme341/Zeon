@@ -3,11 +3,8 @@
 
 #include "CoreMinimal.h"
 #include "TickerModule.h"
-#include "Engine/World.h"
 #include "Containers/Ticker.h"
-#include "Templates/SubclassOf.h"
-#include "Subsystems/GameInstanceSubsystem.h"
-#include "StaticTickerManager.generated.h"
+#include "Utility/Invoker.h"
 
 /** Enum для выбора ивента для активации или де активации тикера */
 UENUM(BlueprintType)
@@ -24,28 +21,18 @@ enum class ETickerStateType : uint8
 DECLARE_LOG_CATEGORY_EXTERN(LogStaticTicker, Log, All);
 
 /** Класс, обеспечивающая централизованное управление логикой, работающей во времени через систему модулей. */
-UCLASS(BlueprintType)
-class TICKERSYSTEM_API UStaticTickerManager : public UObject
+class TICKERSYSTEM_API FStaticTickerManager
 {
-	GENERATED_BODY()
-
-	friend UTickerModule;
+	friend FTickerModule;
 	
 	bool Tick(float DeltaTime);
-	void BeginDestroy() override;
 	bool CleanupManager(float DeltaTime);
 	
-	bool DoesRequireTicker(const UTickerModule* IgnoreModule) const;
+	bool DoesRequireTicker(const FTickerModule* IgnoreModule) const;
 	
 	void TryStartTicker();
-	void TryEndTicker(const UTickerModule* Module) const;
+	void TryEndTicker(const FTickerModule* Module) const;
 	bool EndTicker() const;
-	
-	void OnGameStarted(EWorldType::Type WorldType);
-	void OnGameEnded(UWorld* World);
-	void OnGamePaused(bool bPaused);
-
-	// ---------------- Vars ----------------
 
 	bool bLastPauseState = false;
 	float CurrentCleanupTime = 0.f;
@@ -54,57 +41,52 @@ class TICKERSYSTEM_API UStaticTickerManager : public UObject
 	FDelegateHandle GameEndedDelegateHandle;
 	FDelegateHandle GameStartedDelegateHandle;
 	FDelegateHandle GamePauseDelegateHandle;
-	TMap<TSubclassOf<UTickerModule>, TStrongObjectPtr<UTickerModule>> TickerModules;
-public:
-	UStaticTickerManager();
-	
-	// ---------------- AbilitySettings ----------------
+	TMap<FName, TUniquePtr<FTickerModule>> TickerModules;
+protected:
+	FStaticTickerManager();
+	virtual ~FStaticTickerManager();
 
+	FStaticTickerManager(const FStaticTickerManager&) = delete;
+	FStaticTickerManager& operator=(const FStaticTickerManager&) = delete;
+
+	virtual void OnGameStarted(EWorldType::Type WorldType);
+	virtual void OnGameEnded(UWorld* World);
+	virtual void OnGamePaused(bool bPaused);
+	
 	/** Использовать ли систему проверки занятости тикера */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySettings")
 	bool bUseCleanupSystem = true;
 
 	/** Частота проверки занятость тикера */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySettings", meta = (EditCondition = "bUseCleanupSystem"))
 	float CleanupRate = 30.f;
 
-	/** Частота обновления состояния паузы */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySettings")
-	float PauseUpdateRate = 0.1f;
-
 	/** Частота обновления главного тикера */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySettings")
 	float GlobalTickerUpdateRate = 0.001;
 
 	/** Список триггеров, при активации одного из них, система попытается активировать тикер */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySettings")
 	TSet<ETickerStateType> AutoActivateTickerType;
 
 	/** Список триггеров, при активации одного из них, система попытается отключить тикер */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySettings")
 	TSet<ETickerStateType> AutoDisableTickerType;
 
 	// ---------------- Fun ----------------
 
 	/** Функция для добавления модуля в систему */
-	UTickerModule* AddModule(const TSubclassOf<UTickerModule>& ModuleClass);
+	bool RegisterTickerModule(FTickerModule* Module);
 
-	/** Функция для добавления модулей в систему */
-	FORCEINLINE void AddModules(const TSet<TSubclassOf<UTickerModule>>& ModuleClass)
-	{
-		for (auto Module : ModuleClass) AddModule(Module);
-	}
-		
 	/** Функция для получения зарегистрированного в системе модуля */
-	UTickerModule* GetModule(const TSubclassOf<UTickerModule>& ModuleClass);
+	FTickerModule* GetTickerModuleMutable(const FName ModuleName);
 
 	/** Функция для создания и регистрации модуля в системе через шаблон, важно что добавление должно происходить в конструкторе */
 	template<typename T>
-	T* AddModule();
+	T* AddTickerModule();
 
 	/** Функция для получения зарегистрированного в системе модуля через шаблон  */
 	template<typename T>
-	T* GetModule();
+	T* GetTickerModuleMutable();
+
+	/** Функция для получения константного указателя на зарегистрированного модуля через шаблон */
+	template<typename T>
+	const T* GetTickerModule() const;
 
 	/** Вызывает состояние активации или де активации тикера */
 	FORCEINLINE void TryAutoModifyTickerState(const ETickerStateType& TickerState)
@@ -112,13 +94,6 @@ public:
 		if (AutoActivateTickerType.Contains(TickerState)) TryStartTicker();
 		if (AutoDisableTickerType.Contains(TickerState)) EndTicker();
 	}
-
-	/** Создает объект, важно отметить что функцию запрещённое юзать в конструкторе owner */
-	static UStaticTickerManager* New(UObject* Owner) { return NewObject<UStaticTickerManager>(Owner); }
-
-	/** Функция должна быть обязательно вызвана перед удалением владелица*/ 
-	FORCEINLINE void Shutdown();
-	
 private:
 
 	/** Обёртка для логов LogStaticTicker из шаблонов для избежания LNK ошибок. */
@@ -135,30 +110,38 @@ private:
 };
 
 template <typename T>
-T* UStaticTickerManager::AddModule()
+T* FStaticTickerManager::AddTickerModule()
 {
-	const auto& ModuleClass = T::StaticClass();
-	if (TickerModules.Contains(ModuleClass))
+	const auto& ModuleName = T::GetModuleName();
+	if (TickerModules.Contains(ModuleName))
 	{
-		LogTickerWarning(FString::Printf(TEXT("Cannot add module '%s' because it is already added"), *ModuleClass->GetName()));
+		LogTickerWarning(FString::Printf(TEXT("Cannot add module '%s' because it is already added"), *ModuleName.ToString()));
 		return nullptr;	
 	}
-	if (T* NewModule = NewObject<T>(this))
+	if (T* NewModule = new T())
 	{
-		// Set up Module AbilitySettings...
 		NewModule->OwnerManager = this;
-		TickerModules.Add(ModuleClass, TStrongObjectPtr(MoveTemp(NewModule)));
+		TickerModules.Add(ModuleName, TUniquePtr<FTickerModule>(std::move(NewModule)));
 		return NewModule;
 	}
-	LogTickerError(FString::Printf(TEXT("Cannot create module: %s"), *ModuleClass->GetName()));
+	LogTickerError(FString::Printf(TEXT("Cannot create module: %s"), *ModuleName.ToString()));
 	return nullptr;
 }
 
 template <typename T>
-T* UStaticTickerManager::GetModule()
+T* FStaticTickerManager::GetTickerModuleMutable()
 {
-	const auto& ModuleClass = T::StaticClass();
-	check(TickerModules.Contains(ModuleClass))
-	TStrongObjectPtr<UTickerModule>* FoundPtr = TickerModules.Find(ModuleClass);
-	return   FoundPtr ? Cast<T>(FoundPtr->Get()) : nullptr;
+	const FName ModuleName = T::GetModuleName();
+	const auto* Found = TickerModules.Find(ModuleName);
+	if (!Found) return nullptr;
+	return static_cast<T*>(Found->Get());
+}
+
+template <typename T>
+const T* FStaticTickerManager::GetTickerModule() const
+{
+	const FName ModuleName = T::GetModuleName();
+	const auto* Found = TickerModules.Find(ModuleName);
+	if (!Found) return nullptr;
+	return static_cast<T*>(Found->Get());
 }

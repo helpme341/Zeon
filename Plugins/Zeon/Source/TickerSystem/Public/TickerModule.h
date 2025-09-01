@@ -2,21 +2,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "TickerModule.generated.h"
+
+#define GENERATED_TICKER_BODY(Name) \
+	public: \
+		static FName GetModuleName() { return Name; } \
+	private:
 
 /** Обработчик задачи, подключённый к FStaticTickerManager для выполнения во времени */
-UCLASS()
-class TICKERSYSTEM_API UTickerModule : public UObject
+class TICKERSYSTEM_API FTickerModule
 {
-	GENERATED_BODY()
-	
-	friend class UStaticTickerManager;
+public:
+	virtual ~FTickerModule() = default;
+
+private:
+	friend class FStaticTickerManager;
 
 	bool bIsGamePaused = false;
 	
 	/** Владелец - менеджер модуля */
-	UPROPERTY()
-	TObjectPtr<UStaticTickerManager> OwnerManager;
+	FStaticTickerManager* OwnerManager;
 protected:
 	FORCEINLINE bool GetIsGamePaused() const { return bIsGamePaused; }
 
@@ -34,7 +38,7 @@ protected:
 	virtual void OnGameUnPaused() {}
 	
 	/** Вызывается из менеджера для проверки нужен ли модулю tick, если нужен то возвращаем true, иначе false */
-	virtual bool NeedUpdate() const PURE_VIRTUAL(UTickerModule::NeedUpdate, return false;)
+	virtual bool NeedUpdate() const { return false; }
 
 	/** Функция для попытки начать работу tich в менеджера */	
 	void TryStartTicker() const;
@@ -44,5 +48,9 @@ protected:
 	/** Функция для попытки закончить работу tich в менеджере, с проверкой нужен ли тикер этому модулю */	
 	void TryEndTickerSave() const;
 
+	/** Имя модуля нужное для его регистрации в системе */
+	FName ModuleName = NAME_None;
+
+	/** Останавливать ли обновление модуля во время паузы */
 	bool bTickInPauseDisabled = true;
 };
