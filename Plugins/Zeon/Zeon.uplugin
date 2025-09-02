@@ -1,7 +1,7 @@
 {
     "FileVersion": 3,
     "Version": 0,
-    "VersionName": "0.3.6.3",
+    "VersionName": "0.3.6.4",
     "FriendlyName": "Zeon",
     "Name": "Zeon",
     "Description": "",
@@ -28,6 +28,12 @@
           "Name": "TickerSystem",
           "Type": "Runtime",
           "LoadingPhase": "Default"
+        }
+    ],
+    "Plugins": [
+        {
+          "Name": "EnhancedInput",
+          "Enabled": true
         }
     ]
 }

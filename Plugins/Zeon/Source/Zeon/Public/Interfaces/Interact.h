@@ -1,11 +1,11 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+#include "EnhancedInputComponent.h"
 #include "GameplayTagContainer.h"
 #include "UObject/Interface.h"
+#include "InputCoreTypes.h"
 #include "Interact.generated.h"
-
-enum class ETriggerEvent : uint8;
 
 UINTERFACE(BlueprintType)
 class ZEON_API UInteract : public UInterface
