@@ -8,7 +8,7 @@
 enum class ETriggerEvent : uint8;
 
 UINTERFACE(BlueprintType)
-class MODMAN_API UInteract : public UInterface
+class ZEON_API UInteract : public UInterface
 {
 	GENERATED_BODY()
 };
