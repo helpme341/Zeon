@@ -19,6 +19,5 @@ class ZEON_API IInteract
 
 public:
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Interact")
 	virtual void Interact(const FGameplayTag& InteractType, ETriggerEvent TriggerEvent, APawn* Player) = 0;
 };
