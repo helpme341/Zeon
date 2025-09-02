@@ -11,6 +11,7 @@ public class Zeon : ModuleRules
 			new string[]
 			{
 				"Core",
+				"GameplayTags",
 			}
 			);
 			
