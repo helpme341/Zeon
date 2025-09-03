@@ -4,12 +4,12 @@
 
 void FTickerModule::TryStartTicker() const
 {
-	OwnerManager->TryStartTicker();
+	if (OwnerManager) OwnerManager->TryStartTicker();
 }
 
 void FTickerModule::TryEndTicker() const
 {
-	OwnerManager->TryEndTicker(this);
+	if (OwnerManager) OwnerManager->TryEndTicker(this);
 }
 
 void FTickerModule::TryEndTickerSave() const

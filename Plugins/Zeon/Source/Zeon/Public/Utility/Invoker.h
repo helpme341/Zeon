@@ -114,7 +114,6 @@ public:
 		return *this;
 	}
 
-
 	template<typename ClassType>
 	FORCEINLINE TInvoker(ClassType* InInstance, RetT(ClassType::*InMethod)(Args...)) { Bind(InInstance, InMethod); }
 
