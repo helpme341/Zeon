@@ -14,7 +14,7 @@ protected:
 
 	FORCEINLINE virtual void StartTickerUpdate()
 	{
-		if (bUpdateWindow && !TickHandle.IsValid()) FTSTicker::GetCoreTicker().AddTicker(TickDelegate, UpdateWindowRate);
+		if (bUpdateWindow && !TickHandle.IsValid() && bIsWindowRegistered) FTSTicker::GetCoreTicker().AddTicker(TickDelegate, UpdateWindowRate);
 	}
 	FORCEINLINE virtual void EndTickerUpdate()
 	{
@@ -37,6 +37,7 @@ protected:
 	 * А также выключает при выходе из PIE или закрытии она
 	*/
 	bool bAutoManageTicker = true;
+	bool bIsWindowRegistered = false;
 	
 	// Window Settings:
 	bool bUpdateWindow = true;

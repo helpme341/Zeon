@@ -63,5 +63,6 @@ TSharedRef<SDockTab> FWindowModuleBase::RegisterWindow(const FSpawnTabArgs& Spaw
 		
 	const FSlateIcon Icon = FSlateIconFinder::FindIcon(WindowIcon);
 	Window->SetTabIcon(Icon.GetIcon());
+	bIsWindowRegistered = true;
 	return Window;
 }
