@@ -1,4 +1,4 @@
 
 #include "TraceUtility.h"
 
-bool FTraceUtility::bShowDebug = false	;
+bool FTraceUtility::bShowDebug = false;

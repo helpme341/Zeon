@@ -1,4 +1,5 @@
-﻿#pragma once
+﻿
+#pragma once
 
 #include "CoreMinimal.h"
 #include "EnhancedInputComponent.h"
@@ -19,5 +20,6 @@ class ZEON_API IInteract
 
 public:
 
-	virtual void Interact(const FGameplayTag& InteractType, const ETriggerEvent TriggerEvent, APawn* Player) = 0;
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Interaction")
+	void Interact(const FGameplayTag& InteractType, const ETriggerEvent TriggerEvent, APawn* Player);
 };
