@@ -24,10 +24,18 @@ FStaticTickerManager::~FStaticTickerManager()
 	TickerModules.Empty();
 }
 
-bool FStaticTickerManager::Tick(float DeltaTime)
+bool FStaticTickerManager::TickerTick(float DeltaTime)
 {
-	for (auto& [_, Module] : TickerModules)
+	TArray<FName> SortedKeys;
+	TickerModules.GetKeys(SortedKeys);
+	SortedKeys.Sort([&](const FName& A, const FName& B)
 	{
+		return TickerModules[A]->Phase < TickerModules[B]->Phase;
+	});
+
+	for (const FName& Key : SortedKeys)
+	{
+		auto& Module = TickerModules[Key];
 		if (Module->bTickInPauseDisabled && bLastPauseState) continue;
 		Module->Tick(DeltaTime);
 	}
@@ -36,6 +44,7 @@ bool FStaticTickerManager::Tick(float DeltaTime)
 
 bool FStaticTickerManager::CleanupManager(float DeltaTime)
 {
+	if (bIsTickerUnDisable) return false;
 	if (!TickHandle.IsValid() || !bUseCleanupSystem) return false;
 	
 	CurrentCleanupTime += DeltaTime;
@@ -73,12 +82,13 @@ void FStaticTickerManager::TryStartTicker()
 		return;
 	}
 	CurrentCleanupTime = 0.f;
-	TickHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateRaw(this, &FStaticTickerManager::Tick), GlobalTickerUpdateRate);
+	TickHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateRaw(this, &FStaticTickerManager::TickerTick), GlobalTickerUpdateRate);
 }
 
 void FStaticTickerManager::TryEndTicker(const FTickerModule* Module) const
 {
 	check(Module)
+	if (bIsTickerUnDisable) return;
 	if (DoesRequireTicker(Module))
 	{
 		UE_LOG(LogStaticTicker, Warning, TEXT("Cannot disable ticker because module '%s' is using it"), *Module->ModuleName.ToString());

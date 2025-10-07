@@ -4,7 +4,6 @@
 #include "CoreMinimal.h"
 #include "TickerModule.h"
 #include "Containers/Ticker.h"
-#include "Utility/Invoker.h"
 
 /** Enum для выбора ивента для активации или де активации тикера */
 UENUM(BlueprintType)
@@ -25,7 +24,6 @@ class TICKERSYSTEM_API FStaticTickerManager
 {
 	friend FTickerModule;
 	
-	bool Tick(float DeltaTime);
 	bool CleanupManager(float DeltaTime);
 	
 	bool DoesRequireTicker(const FTickerModule* IgnoreModule) const;
@@ -49,12 +47,18 @@ protected:
 	FStaticTickerManager(const FStaticTickerManager&) = delete;
 	FStaticTickerManager& operator=(const FStaticTickerManager&) = delete;
 
+	virtual bool TickerTick(float DeltaTime);
+	
 	virtual void OnGameStarted(EWorldType::Type WorldType);
 	virtual void OnGameEnded(UWorld* World);
 	virtual void OnGamePaused(bool bPaused);
+
 	
 	/** Использовать ли систему проверки занятости тикера */
 	bool bUseCleanupSystem = true;
+
+	/** Работает ли тикер непрерывно на протяжении всей работы менеджера, независимо от состояния модулей */
+	bool bIsTickerUnDisable = false;
 
 	/** Частота проверки занятость тикера */
 	float CleanupRate = 30.f;

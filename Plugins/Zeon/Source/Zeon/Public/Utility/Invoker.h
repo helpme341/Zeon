@@ -26,7 +26,11 @@ private:
 	struct TBaseHolder
 	{
 		virtual ~TBaseHolder() = default;
-		virtual RetT Invoke(void* RawInstance, Args&&... InArgs) { return RetT(); }
+		virtual RetT Invoke(void* RawInstance, Args&&... InArgs)
+		{
+			if constexpr (std::is_void_v<RetT>) return;
+			else return RetT();
+		}
 
 		EInvokerType InvokerType = EInvokerType::Fun;
 	};
@@ -77,7 +81,7 @@ private:
 			}
 		}
 
-		FORCEINLINE bool IsBound() const { return GetHolder(); }
+		FORCEINLINE bool IsBound() const { return LargeHolder.IsValid() || SmallHolder.IsValid(); }
 		FORCEINLINE void ClearHolder()
 		{
 			if (bIsLarge) LargeHolder.Reset();
@@ -126,7 +130,8 @@ public:
 	FORCEINLINE TInvoker(LambdaT&& Lambda) { Bind(Lambda); }
 		
 	FORCEINLINE RetT operator()(Args... InArgs)
-	{	
+	{
+		if (!IsBound()) return RetT();	
 		return HolderContainer.GetHolder().Invoke(Instance, std::forward<Args>(InArgs)...);
 	}
 
@@ -168,11 +173,11 @@ public:
 	
 	FORCEINLINE void Bind(RetT(*StaticFunc)(Args...))
 	{
+		if (!StaticFunc) return;
 		auto Lambda = [StaticFunc](Args&&...InArgs)
 		{
 			return StaticFunc(std::forward<Args>(InArgs)...);
 		};
-		
 		Unbind();
 		HolderContainer.template CreateHolder<TSimpleHolder<decltype(Lambda)>>(EInvokerType::StaticFunc, Lambda);
 	}
@@ -181,7 +186,7 @@ public:
 	void Bind(LambdaT&& Lambda)
 	{
 		Instance = nullptr;
-		HolderContainer.template CreateHolder<TSimpleHolder<std::decay_t<LambdaT>>>(EInvokerType::Lambda, Lambda);
+		HolderContainer.template CreateHolder<TSimpleHolder<std::decay_t<LambdaT>>>(EInvokerType::Lambda, std::forward<LambdaT>(Lambda));
 	}
 
 	FORCEINLINE void Unbind()
@@ -190,9 +195,6 @@ public:
 		HolderContainer.ClearHolder();
 	}
 
-	FORCEINLINE EInvokerType GetInvokerType() const { return HolderContainer.GetGetHolder()->InvokerType; }
-	FORCEINLINE bool IsBound() const
-	{
-		return HolderContainer.IsBound();
-	}
+	FORCEINLINE EInvokerType GetInvokerType() const { return HolderContainer.GetHolder().InvokerType; }
+	FORCEINLINE bool IsBound() const { return HolderContainer.IsBound(); }
 };
