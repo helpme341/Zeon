@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
 #include "Engine/Engine.h"
 #include "Delegates/Delegate.h"
@@ -117,8 +118,6 @@ public:
 		return *Instance;
 	}
 
-
-public:
 	DECLARE_MULTICAST_DELEGATE_OneParam(FOnWorldBeginPlay, EWorldType::Type /*WorldType*/);
 	static FOnWorldBeginPlay OnWorldBeginPlay;
 	
@@ -135,5 +134,130 @@ public:
 			if (WorldTypes.Contains(Context.WorldType)) return Context.World();
 		}
 		return nullptr;
+	}
+
+	static bool AreHitsEqual(const FHitResult& A, const FHitResult& B, float Tolerance = KINDA_SMALL_NUMBER)
+	{
+		return A.ImpactPoint.Equals(B.ImpactPoint, Tolerance)
+			&& A.ImpactNormal.Equals(B.ImpactNormal, Tolerance);
+	}
+
+	
+
+	static bool CapsuleTraceAtLocation(
+		const UCapsuleComponent* Capsule, const float RadiusBonus, const float HalfBonus,
+		const TArray<TEnumAsByte<EObjectTypeQuery>>& ObjectTypes,
+	    FHitResult& OutHit, const bool bTraceComplex = false, const bool bShowDebag = false)
+	{
+	    if (!Capsule) return false;
+
+	    const UWorld* World = Capsule->GetWorld();
+	    if (!World) return false;
+
+	    const FVector Center = Capsule->GetComponentLocation();
+	    const FQuat   Rot    = Capsule->GetComponentQuat();
+
+	    const float Radius = Capsule->GetScaledCapsuleRadius() + RadiusBonus;
+	    const float Half   = Capsule->GetScaledCapsuleHalfHeight() + HalfBonus;
+	    const FCollisionShape Shape = FCollisionShape::MakeCapsule(Radius, Half);
+
+	    FCollisionQueryParams Params(SCENE_QUERY_STAT(CapsuleTraceAtLocation), bTraceComplex);
+	    Params.AddIgnoredActor(Capsule->GetOwner());
+
+	    FCollisionObjectQueryParams ObjParams;
+	    for (auto OT : ObjectTypes)
+	        ObjParams.AddObjectTypesToQuery(UEngineTypes::ConvertToCollisionChannel(OT.GetValue()));
+
+	    TArray<FHitResult> Hits;
+	    const bool bAny = World->SweepMultiByObjectType(Hits, Center, Center, Rot, ObjParams, Shape, Params);
+	    if (!bAny) return false;
+
+	    Hits.Sort([](const FHitResult& A, const FHitResult& B)
+	    {
+	        const bool ABlock = !!A.bBlockingHit;
+	        const bool BBlock = !!B.bBlockingHit;
+	        if (ABlock != BBlock) return ABlock;
+
+	        const bool APen = !!A.bStartPenetrating;
+	        const bool BPen = !!B.bStartPenetrating;
+	        if (APen != BPen) return APen;
+
+	        if (APen && BPen)
+	        {
+	            if (A.PenetrationDepth != B.PenetrationDepth) return A.PenetrationDepth > B.PenetrationDepth; 
+	        }
+	        return A.Time < B.Time;
+	    });
+
+	    OutHit = Hits[0];
+		if (bShowDebag)
+		{
+			const FColor Color = OutHit.bBlockingHit ? FColor::Red : FColor::Yellow;
+
+			DrawDebugCapsule(World, Center, Half, Radius, Rot, Color, false, 1.f, 0, 1.f);
+			DrawDebugPoint(World, OutHit.ImpactPoint, 12.f, Color, false, 1.f);
+			DrawDebugLine(World, OutHit.ImpactPoint,
+						  OutHit.ImpactPoint + OutHit.ImpactNormal * 30.f,
+						  Color, false, 1.f, 0, 1.f);
+		}
+	    return true;
+	}
+
+	static bool CapsuleTraceAtLocation(
+		const UCapsuleComponent* Capsule, const FVector& Center, const float RadiusBonus, const float HalfBonus,
+		const TArray<TEnumAsByte<EObjectTypeQuery>>& ObjectTypes,
+		FHitResult& OutHit, const bool bTraceComplex = false, const bool bShowDebag = false)
+	{
+		if (!Capsule) return false;
+
+		const UWorld* World = Capsule->GetWorld();
+		if (!World) return false;
+
+		const FQuat   Rot    = Capsule->GetComponentQuat();
+
+		const float Radius = Capsule->GetScaledCapsuleRadius() + RadiusBonus;
+		const float Half   = Capsule->GetScaledCapsuleHalfHeight() + HalfBonus;
+		const FCollisionShape Shape = FCollisionShape::MakeCapsule(Radius, Half);
+
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(CapsuleTraceAtLocation), bTraceComplex);
+		Params.AddIgnoredActor(Capsule->GetOwner());
+
+		FCollisionObjectQueryParams ObjParams;
+		for (auto OT : ObjectTypes)
+			ObjParams.AddObjectTypesToQuery(UEngineTypes::ConvertToCollisionChannel(OT.GetValue()));
+
+		TArray<FHitResult> Hits;
+		const bool bAny = World->SweepMultiByObjectType(Hits, Center, Center, Rot, ObjParams, Shape, Params);
+		if (!bAny) return false;
+
+		Hits.Sort([](const FHitResult& A, const FHitResult& B)
+		{
+			const bool ABlock = !!A.bBlockingHit;
+			const bool BBlock = !!B.bBlockingHit;
+			if (ABlock != BBlock) return ABlock;
+
+			const bool APen = !!A.bStartPenetrating;
+			const bool BPen = !!B.bStartPenetrating;
+			if (APen != BPen) return APen;
+
+			if (APen && BPen)
+			{
+				if (A.PenetrationDepth != B.PenetrationDepth) return A.PenetrationDepth > B.PenetrationDepth; 
+			}
+			return A.Time < B.Time;
+		});
+
+		OutHit = Hits[0];
+		if (bShowDebag)
+		{
+			const FColor Color = OutHit.bBlockingHit ? FColor::Red : FColor::Yellow;
+
+			DrawDebugCapsule(World, Center, Half, Radius, Rot, Color, false, 1.f, 0, 1.f);
+			DrawDebugPoint(World, OutHit.ImpactPoint, 12.f, Color, false, 1.f);
+			DrawDebugLine(World, OutHit.ImpactPoint,
+						  OutHit.ImpactPoint + OutHit.ImpactNormal * 30.f,
+						  Color, false, 1.f, 0, 1.f);
+		}
+		return true;
 	}
 };

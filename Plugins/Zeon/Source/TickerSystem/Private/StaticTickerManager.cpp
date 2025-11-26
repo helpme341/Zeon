@@ -78,7 +78,7 @@ void FStaticTickerManager::TryStartTicker()
 {
 	if (TickHandle.IsValid())
 	{
-		UE_LOG(LogStaticTicker, Warning, TEXT("Cannot start ticker because it is already active"));
+		//UE_LOG(LogStaticTicker, Warning, TEXT("Cannot start ticker because it is already active"));
 		return;
 	}
 	CurrentCleanupTime = 0.f;
