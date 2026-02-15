@@ -1,7 +1,7 @@
 {
     "FileVersion": 3,
     "Version": 0,
-    "VersionName": "0.3.8.2",
+    "VersionName": "0.4",
     "FriendlyName": "Zeon",
     "Name": "Zeon",
     "Description": "",
@@ -26,6 +26,11 @@
         },
         {
           "Name": "TickerSystem",
+          "Type": "Runtime",
+          "LoadingPhase": "Default"
+        },
+        {
+          "Name": "Logic",
           "Type": "Runtime",
           "LoadingPhase": "Default"
         }

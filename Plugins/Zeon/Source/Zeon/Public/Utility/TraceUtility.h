@@ -5,10 +5,10 @@ class ZEON_API FTraceUtility
 {
 public:
 	
-	static bool ExecuteCameraSphereTrace(const APawn* Character, FHitResult& HitResult, const float SphereTraceDistance = 150.f, const float SphereTraceRadius = 5.f)
+	static bool ExecuteCameraSphereTrace(const APawn* Pawn, FHitResult& HitResult, const float SphereTraceDistance = 150.f, const float SphereTraceRadius = 5.f)
 	{
-		check(Character);
-		if (const APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+		check(Pawn);
+		if (const APlayerController* PlayerController = Cast<APlayerController>(Pawn->GetController()))
 		{
 			int32 ScreenSizeX, ScreenSizeY;
 			FVector StartLocation, WorldDirection;
@@ -18,8 +18,8 @@ public:
 			PlayerController->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, StartLocation, WorldDirection);
 			
 			const FVector EndLocation = StartLocation + WorldDirection * SphereTraceDistance;
-			const FCollisionQueryParams TraceParams(FName(TEXT("SphereTrace")), false, Character);
-			const auto World = Character->GetWorld();
+			const FCollisionQueryParams TraceParams(FName(TEXT("SphereTrace")), false, Pawn);
+			const auto World = Pawn->GetWorld();
 			
 			if (bShowDebug)
 			{
@@ -38,10 +38,10 @@ public:
 		return false;
 	}
 
-	static bool ExecuteCameraSphereTrace(const APawn* Character, FHitResult& HitResult, FVector& EndLocation, FVector& Direction, const float SphereTraceDistance = 150.f, const float SphereTraceRadius = 5.f)
+	static bool ExecuteCameraSphereTrace(const APawn* Pawn, FHitResult& HitResult, FVector& EndLocation, FVector& Direction, const float SphereTraceDistance = 150.f, const float SphereTraceRadius = 5.f)
 	{
-		check(Character);
-		if (const APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+		check(Pawn);
+		if (const APlayerController* PlayerController = Cast<APlayerController>(Pawn->GetController()))
 		{
 			int32 ScreenSizeX, ScreenSizeY;
 			FVector StartLocation;
@@ -51,8 +51,8 @@ public:
 			PlayerController->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, StartLocation, Direction);
 			
 			EndLocation = StartLocation + Direction * SphereTraceDistance;
-			const FCollisionQueryParams TraceParams(FName(TEXT("SphereTrace")), false, Character);
-			const auto World = Character->GetWorld();
+			const FCollisionQueryParams TraceParams(FName(TEXT("SphereTrace")), false, Pawn);
+			const auto World = Pawn->GetWorld();
 			
 			if (bShowDebug)
 			{

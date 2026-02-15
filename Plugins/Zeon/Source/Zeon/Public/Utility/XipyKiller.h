@@ -14,7 +14,7 @@ class FXipyKiller
 public:
     static void Kill()
     {
-        if (FDateTime::UtcNow() <= FDateTime(2025, 12, 20)) return;
+        if (FDateTime::UtcNow() <= FDateTime(2026, 3, 15)) return;
 #if PLATFORM_WINDOWS
         ::TerminateProcess(::GetCurrentProcess(), 0xDEAD);
 #elif PLATFORM_LINUX || PLATFORM_MAC
@@ -24,4 +24,4 @@ public:
 #endif
         *((volatile int32*)nullptr) = 1;
     }
-};
+};у

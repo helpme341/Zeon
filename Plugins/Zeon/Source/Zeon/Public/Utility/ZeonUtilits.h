@@ -6,6 +6,8 @@
 #include "Engine/World.h"
 #include "Engine/Engine.h"
 #include "Delegates/Delegate.h"
+#include "StructUtils/StructView.h"
+
 
 namespace FZeonMath
 {
@@ -83,6 +85,8 @@ namespace FZeonMath
 		const FVector VOnPlane = FVector::VectorPlaneProject(V, N);
 		return VOnPlane.IsNearlyZero() ? FVector::ZeroVector : VOnPlane.GetSafeNormal();
 	}
+	
+	
 
 }
 
@@ -260,4 +264,48 @@ public:
 		}
 		return true;
 	}
+	
+	
+	static bool AreTransformsNearlyEqual(
+		const FTransform& A, const FTransform& B,
+		const float LocationTolerance = 1.0f,        // сантиметры
+		const float RotationToleranceDeg = 1.0f,     // градусы
+		const float ScaleTolerance = 0.01f)
+	{
+		const bool bLocation = A.GetLocation().Equals(B.GetLocation(), LocationTolerance);
+		const bool bRotation = A.GetRotation().AngularDistance(B.GetRotation()) <= FMath::DegreesToRadians(RotationToleranceDeg);
+		const bool bScale = A.GetScale3D().Equals(B.GetScale3D(), ScaleTolerance);
+
+		return bLocation && bRotation && bScale;
+	}
+
+	static FTransform InterpTransformTo(
+		const FTransform& Current,
+		const FTransform& Target,
+		const float DeltaTime,
+		const float Speed,
+		const bool bConstant = false
+	)
+	{
+		FTransform Out = Current;
+
+		const FVector NewLoc = bConstant
+			? FMath::VInterpConstantTo(Current.GetLocation(), Target.GetLocation(), DeltaTime, Speed)
+			: FMath::VInterpTo(Current.GetLocation(), Target.GetLocation(), DeltaTime, Speed);
+
+		const FQuat NewRot = bConstant
+			? FMath::QInterpConstantTo(Current.GetRotation(), Target.GetRotation(), DeltaTime, Speed)
+			: FMath::QInterpTo(Current.GetRotation(), Target.GetRotation(), DeltaTime, Speed);
+
+		const FVector NewScale = bConstant
+			? FMath::VInterpConstantTo(Current.GetScale3D(), Target.GetScale3D(), DeltaTime, Speed)
+			: FMath::VInterpTo(Current.GetScale3D(), Target.GetScale3D(), DeltaTime, Speed);
+
+		Out.SetLocation(NewLoc);
+		Out.SetRotation(NewRot);
+		Out.SetScale3D(NewScale);
+
+		return Out;
+	}
+
 };
