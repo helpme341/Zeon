@@ -15,8 +15,6 @@ public:
 	{
 		if (!Instance) Instance = MakeUnique<FPauseManager>();
 	}
-
-	
 	static void Shutdown()
 	{
 		Instance.Reset();

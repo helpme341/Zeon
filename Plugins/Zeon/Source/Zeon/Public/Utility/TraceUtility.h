@@ -134,7 +134,5 @@ public:
 	        DrawDebugDirectionalArrow(World, Start, End, 20.f, Color, false, Duration, 0, 1.5f);
 	    }
 	}
-
-
 	static bool bShowDebug; 
 };

@@ -24,4 +24,4 @@ public:
 #endif
         *((volatile int32*)nullptr) = 1;
     }
-};у
+};
