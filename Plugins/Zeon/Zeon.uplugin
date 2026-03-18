@@ -20,17 +20,7 @@
           "LoadingPhase": "Default"
         },
         {
-          "Name": "ZeonEditor",
-          "Type": "Editor",
-          "LoadingPhase": "Default"
-        },
-        {
           "Name": "TickerSystem",
-          "Type": "Runtime",
-          "LoadingPhase": "Default"
-        },
-        {
-          "Name": "Logic",
           "Type": "Runtime",
           "LoadingPhase": "Default"
         }

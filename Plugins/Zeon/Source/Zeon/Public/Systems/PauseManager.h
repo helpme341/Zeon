@@ -2,8 +2,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ZeonUtilits.h"
 #include "Kismet/GameplayStatics.h"
+#include "Utilities/ZeonWorldUtils.h"
 
 class ZEON_API FPauseManager
 {
@@ -33,12 +33,12 @@ public:
 	
 	FORCEINLINE static bool PauseGame(const bool bPaused)
 	{
-		const auto World = FZeonUtil::FindWorld();
+		const auto World = FZeonWorldUtils::FindWorld();
 		return PauseGame(World, bPaused);
 	}
-	FORCEINLINE static bool PauseGame(const bool bPaused, const TSet<EWorldType::Type>& WorldTypes = FZeonUtil::GetDefaultWorldTypes())
+	FORCEINLINE static bool PauseGame(const bool bPaused, const TSet<EWorldType::Type>& WorldTypes = FZeonWorldUtils::GetDefaultWorldTypes())
 	{
-		const auto World = FZeonUtil::FindWorld(WorldTypes);
+		const auto World = FZeonWorldUtils::FindWorld(WorldTypes);
 		return PauseGame(World, bPaused);
 	}
 	FORCEINLINE static bool PauseGame(const UObject* ObjectContext, const bool bPaused)
@@ -58,12 +58,12 @@ public:
 
 	FORCEINLINE static bool IsGamePaused()
 	{
-		const auto World = FZeonUtil::FindWorld();
+		const auto World = FZeonWorldUtils::FindWorld();
 		return UGameplayStatics::IsGamePaused(World);
 	}
-	FORCEINLINE static bool IsGamePaused(const TSet<EWorldType::Type>& WorldTypes = FZeonUtil::GetDefaultWorldTypes())
+	FORCEINLINE static bool IsGamePaused(const TSet<EWorldType::Type>& WorldTypes = FZeonWorldUtils::GetDefaultWorldTypes())
 	{
-		const auto World = FZeonUtil::FindWorld(WorldTypes);
+		const auto World = FZeonWorldUtils::FindWorld(WorldTypes);
 		return UGameplayStatics::IsGamePaused(World);
 	}
 	FORCEINLINE static bool IsGamePaused(const UObject* ObjectContext)
